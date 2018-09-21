@@ -320,7 +320,10 @@ function githubIssuesToDependencyGraph (issues) {
       dependencyUrlToCanonicalName)
 
     var res = {}
-    res[name] = deps
+    res[name] = {
+      'title': issue.title,
+      'dependencies': deps
+    }
     return res
   })
 
