@@ -164,49 +164,6 @@ module.exports = function (opts, cb) {
 
     fetchIssuesPage(url, [], cb)
 
-
-    function fetchIssuesPage (url, issuesAccum, cb) {
-      "Recursively fetches subsequent pages of GitHub issues via the GitHub API."
-
-      var ropts = {
-        url: addAuthToUrl(url),
-        headers: {
-          'User-Agent': userAgent()
-        }
-      }
-      // console.error('request:', ropts.url)
-      request(ropts, function (err, res, body) {
-        // Bogus response
-        if (err || res.statusCode !== 200) {
-          // console.log(res)
-          return cb(err || new Error('status code ' + res.statusCode))
-        }
-
-        // Parse JSON response
-        try {
-          body = JSON.parse(body)
-        } catch (err) {
-          return cb(err)
-        }
-
-        // console.log('    got issues', body.length)
-
-        issuesAccum = issuesAccum.concat(body)
-
-        // Recursive pagination, or terminate
-        if (res.headers['link']) {
-          var links = parseLinkHeader(res.headers['link'])
-          if (links['next']) {
-            return fetchIssuesPage(links['next'], issuesAccum, cb)
-          }
-        }
-
-        // Fall-through base case: no more pages
-        // console.log('accum', issuesAccum)
-        cb(null, issuesAccum)
-      })
-    }
-
     function fetchComments (url, commentAccum, cb) {
       "Recursively fetches subsequent pages of GitHub issues via the GitHub API."
 
@@ -246,6 +203,56 @@ module.exports = function (opts, cb) {
         // Fall-through base case: no more pages
         // console.log('accum', issuesAccum)
         cb(null, commentAccum)
+      })
+    }
+
+    function fetchIssuesPage (url, issuesAccum, cb) {
+      "Recursively fetches subsequent pages of GitHub issues via the GitHub API."
+
+      var ropts = {
+        url: addAuthToUrl(url),
+        headers: {
+          'User-Agent': userAgent()
+        }
+      }
+      // console.error('request:', ropts.url)
+      request(ropts, function (err, res, body) {
+        // Bogus response
+        if (err || res.statusCode !== 200) {
+          // console.log(res)
+          return cb(err || new Error('status code ' + res.statusCode))
+        }
+
+        // Parse JSON response
+        try {
+          body = JSON.parse(body)
+        } catch (err) {
+          return cb(err)
+        }
+
+        // console.log('    got issues', body.length)
+
+        issuesAccum = issuesAccum.concat(body)
+
+        // Recursive pagination, or terminate
+        if (res.headers['link']) {
+          var links = parseLinkHeader(res.headers['link'])
+          if (links['next']) {
+            return fetchIssuesPage(links['next'], issuesAccum, cb)
+          }
+        }
+
+        // Fall-through base case: no more pages
+        // console.log('accum', issuesAccum)
+        issuesLeft = issuesAccum.length
+        issuesAccum.forEach(function (issue) {
+          fetchComments(issue.url, [], function (err, comments) {
+            issue.commentsList = comments
+            if (--issuesLeft === 0) {
+              cb(null, issuesAccum)
+            }
+          })
+        })
       })
     }
   }
@@ -358,7 +365,7 @@ function githubIssuesToDependencyGraph (issues) {
     var name = dependencyUrlToCanonicalName(issue.url)
     var orgRepo = name.split('/').slice(0, 2).join('/')
     var deps = filterMap(
-      extractDependencyUrls(issue.body, orgRepo),
+      extractDependencyUrls(issue, orgRepo),
       dependencyUrlToCanonicalName)
 
     var res = {}
@@ -393,12 +400,17 @@ function getUnresolvedDependencies (graph) {
     }, [])
 }
 
-function extractDependencyUrls (string, orgRepo) {
+function extractDependencyUrls (issue, orgRepo) {
   "Given a freeform multi-line string, extract all dependencies as URLs. If an optional 'orgRepo' string is given (e.g. noffle/latest-tweets), dependency strings of the form 'Depends on #24' can be resolved to the current repo."
 
-  if (!string) {
+  if (!issue) {
     return []
   }
+
+  string = issue.body
+  issue.commentList.forEach(function (comment) {
+    string += comment.body
+  })
 
   // TODO: assumes \r\n newlines, which is correct *today*, but in THE FUTURE?
   // iterate over lines in the body
