@@ -45,6 +45,15 @@ module.exports = function (opts, cb) {
   // Various helper functions, included in the same closure to retain the binding to 'opts'.
   // ---------------------------------------------------------------------------------------
 
+  function addAuthToUrl(url) {
+    if (url.includes(':') && url.includes('@')) return url
+    creds = ''
+    if (opts.auth && opts.auth.user && opts.auth.token) {
+      creds = opts.auth.user + ':' + opts.auth.token + '@'
+    }
+    return url.replace('://', '://' + creds)
+  }
+
   function recursiveOrgNameToDependencyGraph (org, cb) {
     "Asynchronously gets all issues from all GitHub repos of a GitHub organization and follows all out-of-repo links recursively, returning a full dependency graph for that organization."
 
@@ -160,14 +169,10 @@ module.exports = function (opts, cb) {
       "Recursively fetches subsequent pages of GitHub issues via the GitHub API."
 
       var ropts = {
-        url: url,
+        url: addAuthToUrl(url),
         headers: {
           'User-Agent': userAgent()
         }
-      }
-      if (opts.auth && opts.auth.client_id && opts.auth.client_secret) {
-        ropts.url += '&client_id=' + opts.auth.client_id
-        ropts.url += '&client_secret=' + opts.auth.client_secret
       }
       // console.error('request:', ropts.url)
       request(ropts, function (err, res, body) {
@@ -217,14 +222,10 @@ module.exports = function (opts, cb) {
       "Recursively fetches subsequent pages of GitHub repos via the GitHub API."
 
       var ropts = {
-        url: url,
+        url: addAuthToUrl(url),
         headers: {
           'User-Agent': userAgent()
         }
-      }
-      if (opts.auth && opts.auth.client_id && opts.auth.client_secret) {
-        ropts.url += '&client_id=' + opts.auth.client_id
-        ropts.url += '&client_secret=' + opts.auth.client_secret
       }
       // console.error('request:', ropts.url)
       request(ropts, function (err, res, body) {
@@ -277,14 +278,10 @@ module.exports = function (opts, cb) {
 
     // Retrieve the issue
     var ropts = {
-      url: 'https://api.github.com/repos/' + org + '/' + repo + '/issues/' + issueNum,
+      url: addAuthToUrl('https://api.github.com/repos/' + org + '/' + repo + '/issues/' + issueNum),
       headers: {
         'User-Agent': userAgent()
       }
-    }
-    if (opts.auth && opts.auth.client_id && opts.auth.client_secret) {
-      ropts.url += '&client_id=' + opts.auth.client_id
-      ropts.url += '&client_secret=' + opts.auth.client_secret
     }
     // console.error('request:', opts.url)
     request(ropts, function (err, res, body) {
