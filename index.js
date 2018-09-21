@@ -408,7 +408,7 @@ function extractDependencyUrls (issue, orgRepo) {
   }
 
   string = issue.body
-  issue.commentList.forEach(function (comment) {
+  issue.commentsList.forEach(function (comment) {
     string += comment.body
   })
 
