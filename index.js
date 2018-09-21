@@ -342,7 +342,7 @@ function getUnresolvedDependencies (graph) {
   return Object.keys(graph)
     .reduce(function (issues, key) {
       // all referenced deps that don't exist in the graph
-      var unresolved = graph[key].filter(function (d) {
+      var unresolved = graph[key]['dependencies'].filter(function (d) {
         return graph[d] === undefined
       })
 
@@ -417,7 +417,7 @@ function replaceInGraph (graph, from, to) {
       }
 
       // replace occurrences in dependencies
-      graph[key] = graph[key].map(function (dep) {
+      graph[key]['dependencies'] = graph[key]['dependencies'].map(function (dep) {
         return (dep === from) ? to : dep
       })
     })
