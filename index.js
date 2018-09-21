@@ -358,15 +358,15 @@ function extractDependencyUrls (string, orgRepo) {
   // iterate over lines in the body
   return filterMap(string.toLowerCase().split('\r\n'), function (line) {
     // match 'depends on' prefix
-    if (line.match(/^depends on http/)) {
+    if (line.match(/depends on http/)) {
       // extract url
       var urls = urlMatch(line)
       if (urls.length === 1) {
         return urls[0]
       }
-    } else if (orgRepo && line.match(/^depends on #(\d+)/)) {
+    } else if (orgRepo && line.match(/depends on #(\d+)/)) {
       // extract issue-num
-      var issueNum = line.match(/^depends on #(\d+)/)[1]
+      var issueNum = line.match(/depends on #(\d+)/)[1]
       return 'https://github.com/' + orgRepo + '/issues/' + issueNum
     }
     return false
