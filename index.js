@@ -383,11 +383,11 @@ function dependencyUrlToCanonicalName (url) {
     var components = parsed.path.split('/')
     // https://www.github.com/OWNER/REPO/issues/NUM
     if (components.length === 5 && components[0] === '' && components[3] === 'issues') {
-      return components[1] + '/' + components[2] + '/' + components[4]
+      return components[1] + '/' + components[2] + '/' + components[3] + '/' + components[4]
     }
     // https://api.github.com/repos/OWNER/REPO/issues/NUM
     else if (components.length === 6 && components[1] === 'repos' && components[4] === 'issues') {
-      return components[2] + '/' + components[3] + '/' + components[5]
+      return components[2] + '/' + components[3] + '/' + components[4] + '/' + components[5]
     }
   }
 
