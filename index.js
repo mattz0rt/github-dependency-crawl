@@ -206,6 +206,48 @@ module.exports = function (opts, cb) {
         cb(null, issuesAccum)
       })
     }
+
+    function fetchComments (url, commentAccum, cb) {
+      "Recursively fetches subsequent pages of GitHub issues via the GitHub API."
+
+      var ropts = {
+        url: addAuthToUrl(url + '/comments'),
+        headers: {
+          'User-Agent': userAgent()
+        }
+      }
+      // console.error('request:', ropts.url)
+      request(ropts, function (err, res, body) {
+        // Bogus response
+        if (err || res.statusCode !== 200) {
+          // console.log(res)
+          return cb(err || new Error('status code ' + res.statusCode))
+        }
+
+        // Parse JSON response
+        try {
+          body = JSON.parse(body)
+        } catch (err) {
+          return cb(err)
+        }
+
+        // console.log('    got issues', body.length)
+
+        commentAccum = commentAccum.concat(body)
+
+        // Recursive pagination, or terminate
+        if (res.headers['link']) {
+          var links = parseLinkHeader(res.headers['link'])
+          if (links['next']) {
+            return fetchIssuesPage(links['next'], issuesAccum, cb)
+          }
+        }
+
+        // Fall-through base case: no more pages
+        // console.log('accum', issuesAccum)
+        cb(null, commentAccum)
+      })
+    }
   }
 
   function orgToRepos (org, cb) {
@@ -322,6 +364,7 @@ function githubIssuesToDependencyGraph (issues) {
     var res = {}
     res[name] = {
       'title': issue.title,
+      'state': issue.state,
       'dependencies': deps
     }
     return res
