@@ -356,17 +356,17 @@ function extractDependencyUrls (string, orgRepo) {
 
   // TODO: assumes \r\n newlines, which is correct *today*, but in THE FUTURE?
   // iterate over lines in the body
-  return filterMap(string.split('\r\n'), function (line) {
+  return filterMap(string.toLowerCase().split('\r\n'), function (line) {
     // match 'depends on' prefix
-    if (line.match(/^Depends on http/)) {
+    if (line.match(/^depends on http/)) {
       // extract url
       var urls = urlMatch(line)
       if (urls.length === 1) {
         return urls[0]
       }
-    } else if (orgRepo && line.match(/^Depends on #(\d+)/)) {
+    } else if (orgRepo && line.match(/^depends on #(\d+)/)) {
       // extract issue-num
-      var issueNum = line.match(/^Depends on #(\d+)/)[1]
+      var issueNum = line.match(/^depends on #(\d+)/)[1]
       return 'https://github.com/' + orgRepo + '/issues/' + issueNum
     }
     return false
