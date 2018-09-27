@@ -414,21 +414,25 @@ function extractDependencyUrls (issue, orgRepo) {
 
   // TODO: assumes \r\n newlines, which is correct *today*, but in THE FUTURE?
   // iterate over lines in the body
-  return filterMap(string.toLowerCase().split('\r\n'), function (line) {
-    // match 'depends on' prefix
-    if (line.match(/depends on http/)) {
-      // extract url
-      var urls = urlMatch(line)
-      if (urls.length === 1) {
-        return urls[0]
-      }
-    } else if (orgRepo && line.match(/depends on #(\d+)/)) {
-      // extract issue-num
-      var issueNum = line.match(/depends on #(\d+)/)[1]
-      return 'https://github.com/' + orgRepo + '/issues/' + issueNum
+  line = string.toLowerCase()
+  // match 'depends on' prefix
+  if (line.match(/depends on http/)) {
+    // extract url
+    var urls = urlMatch(line)
+    if (urls.length === 1) {
+      return [urls[0]]
     }
-    return false
-  })
+  } else if (orgRepo && line.match(/depends on #(\d+)/)) {
+    // extract issue-num
+    var counter = 0
+    var all_matches = line.match(/depends on #(\d+)/ig)
+    var issueNums = all_matches.map(function (s) { return s.match(/\d+/)[0] })
+    var urls = issueNums.map(function (issueNum) {
+        return 'https://github.com/' + orgRepo + '/issues/' + issueNum
+    })
+    return urls
+  }
+  return []
 }
 
 function dependencyUrlToCanonicalName (url) {
