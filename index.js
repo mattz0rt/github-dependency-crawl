@@ -408,9 +408,11 @@ function extractDependencyUrls (issue, orgRepo) {
   }
 
   string = issue.body
-  issue.commentsList.forEach(function (comment) {
-    string += comment.body
-  })
+  if (issue.commentsList) {
+    issue.commentsList.forEach(function (comment) {
+      string += comment.body
+    })
+  }
 
   // TODO: assumes \r\n newlines, which is correct *today*, but in THE FUTURE?
   // iterate over lines in the body
