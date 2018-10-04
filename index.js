@@ -372,6 +372,7 @@ function githubIssuesToDependencyGraph (issues) {
     res[name] = {
       'title': issue.title,
       'state': issue.state,
+      'assignee': issue.assignee.login,
       'dependencies': deps
     }
     return res
