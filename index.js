@@ -370,7 +370,7 @@ function githubIssuesToDependencyGraph (issues) {
 
     var res = {}
     res[name] = {
-      'title': issue.title.replace(/"/g, "\\\""),
+      'title': issue.title.replace(/"/g, "'"),
       'state': issue.state,
       'assignee': issue.assignee === null ? null : issue.assignee.login,
       'dependencies': deps
